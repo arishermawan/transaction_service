@@ -2,9 +2,14 @@
 
 FactoryGirl.define do
   factory :location do
-    address "kolla sabang"
+    sequence(:address) { |n| "city-#{n}" }
     coordinate "[-6.185512, 106.824948]"
 
     association :area
+  end
+
+  factory :invalid_location, parent: :location do
+    address nil
+    coordinate nil
   end
 end

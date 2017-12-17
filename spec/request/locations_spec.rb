@@ -1,13 +1,14 @@
 require 'rails_helper'
 
-RSpec.describe 'Order', type: :request do
+RSpec.describe 'Location', type: :request do
 
-  let!(:orders) { create_list(:order, 10) }
-  let(:order_id) { orders.first.id }
+  let!(:area) { create(:area) }
+  let!(:locations) { create_list(:location, 10) }
+  let(:location_id) { locations.first.id }
 
-  describe 'GET /orders' do
-    before { get '/orders' }
-    it 'returns orders' do
+  describe 'GET /locations' do
+    before { get '/locations' }
+    it 'returns locations' do
       expect(json).not_to be_empty
       expect(json.size).to eq(10)
     end
@@ -17,13 +18,13 @@ RSpec.describe 'Order', type: :request do
     end
   end
 
-  describe'GET /orders/:id' do
-    before { get "/orders/#{order_id}" }
+  describe'GET /locations/:id' do
+    before { get "/locations/#{location_id}" }
 
     context 'when the record exists' do
-      it 'returns the order' do
+      it 'returns the location' do
         expect(json).not_to be_empty
-        expect(json['id']).to eq(order_id)
+        expect(json['id']).to eq(location_id)
       end
 
       it 'returns status code 200' do
@@ -32,38 +33,34 @@ RSpec.describe 'Order', type: :request do
     end
 
     context 'when the record does not exists' do
-      let(:order_id) { 100 }
+      let(:location_id) { 100 }
 
       it 'returns status code 404' do
         expect(response).to have_http_status(404)
       end
 
       it 'returns a not found message' do
-        expect(response.body).to match(/Couldn't find Order/)
+        expect(response.body).to match(/Couldn't find Location/)
       end
     end
   end
 
-  describe 'POST /orders' do
+  describe 'POST /locations' do
 
     let(:valid_attributes) {
       {
-        pickup: "kolla sabang",
-        destination: "sarinah mall",
-        payment: 'cash',
-        distance: 9.99,
-        total: 9000,
-        service: "goride",
-        customer_id: 1,
-        driver_id: 5
+        address: "kolla sabang",
+        coordinate: "[-6.185512, 106.824948]",
+        area_id: area.id
+
       }
     }
 
     context 'when the request is valid' do
-      before { post '/orders', params: valid_attributes}
+      before { post '/locations', params: valid_attributes}
 
-      it 'creates a order' do
-        expect(json['pickup']).to eq("kolla sabang")
+      it 'creates a location' do
+        expect(json['address']).to eq("kolla sabang")
       end
 
       it 'returns status code 201' do
@@ -72,7 +69,7 @@ RSpec.describe 'Order', type: :request do
     end
 
     context 'when the request is invalid' do
-      before { post '/orders', params: { order: attributes_for(:invalid_order) } }
+      before { post '/locations', params: { location: attributes_for(:invalid_location) } }
 
       it 'returns status code 422' do
         expect(response).to have_http_status(422)
@@ -80,17 +77,16 @@ RSpec.describe 'Order', type: :request do
 
       it 'returns a validation failure message' do
         expect(response.body)
-          .to match("{\"message\":\"Validation failed: Payment is not included in the list, Service is not included in the list, Pickup can't be blank, Destination can't be blank\"}"
-)
+          .to match("{\"message\":\"Validation failed: Area must exist, Address can't be blank, Coordinate can't be blank\"}")
       end
     end
   end
 
-  describe 'PUT /orders/:id' do
-    let(:valid_attributes) { { order: attributes_for(:order) } }
+  describe 'PUT /locations/:id' do
+    let(:valid_attributes) { { location: attributes_for(:location) } }
 
     context 'when the record exists' do
-      before { put "/orders/#{order_id}", params: valid_attributes, headers: headers }
+      before { put "/locations/#{location_id}", params: valid_attributes, headers: headers }
 
       it 'updates the record' do
         expect(response.body).to be_empty
@@ -102,8 +98,8 @@ RSpec.describe 'Order', type: :request do
     end
   end
 
-  describe 'DELETE /orders/:id' do
-    before { delete "/orders/#{order_id}" }
+  describe 'DELETE /locations/:id' do
+    before { delete "/locations/#{location_id}" }
 
     it 'returns status code 204' do
       expect(response).to have_http_status(204)
