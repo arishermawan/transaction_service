@@ -20,6 +20,11 @@ class LocationsController < ApplicationController
     json_response(@location)
   end
 
+  def driver
+    @location = Location.new.set_driver_location(driver_params)
+    json_response(@location)
+  end
+
   def update
     @location.update(location_params)
     head :no_content
@@ -38,6 +43,10 @@ class LocationsController < ApplicationController
 
   def distance_params
     params.permit(:origin, :destination)
+  end
+
+  def driver_params
+    params.permit(:address, :driver_id, :location_id)
   end
 
   def set_location

@@ -5,11 +5,37 @@ class Location < ApplicationRecord
   validates :address, presence:true, uniqueness:true
   validates :coordinate, presence:true
 
-  def self.get_location(address)
+  def api_key
+    api = 'AIzaSyAT3fcxh_TKujSW6d6fP9cUtrexk0eEvAE'
+  end
+
+  def gmaps
+    gmaps = GoogleMapsService::Client.new(key: api_key)
+  end
+
+  def set_driver_location(driver_params)
+    driver_address = driver_params[:address]
+    driver_id = driver_params[:driver_id].to_i
+    location_id = driver_params[:location_id]
+    puts "---------------------------------------------------------------#{location_id}"
+
+
+    location = get_location(driver_address)
+    puts "---------------------------------------------------------------#{location}"
+    new_area = location.area
+
+    if !location_id.nil?
+      old_location = Location.find(location_id)
+      old_area = old_location.area
+      old_area.delete({driver:driver_id, location:old_location.id})
+    end
+      new_area.enqueue({driver:driver_id, location:location.id})
+    location
+  end
+
+  def get_location(address)
     result = ''
-    api_key = 'AIzaSyAT3fcxh_TKujSW6d6fP9cUtrexk0eEvAE'
     if !address.nil? && !address.empty?
-      gmaps = GoogleMapsService::Client.new(key: api_key)
       address.downcase!
       get_api = gmaps.geocode(address)
       if !get_api.empty?
@@ -32,7 +58,7 @@ class Location < ApplicationRecord
     result
   end
 
-  def self.save_area_not_exist(area)
+  def save_area_not_exist(area)
     check_area = Area.find_by(name: area)
     if check_area == nil
       check_area = Area.create(name: area)
@@ -40,7 +66,7 @@ class Location < ApplicationRecord
     check_area
   end
 
-  def self.save_location_not_exist(area, address, coordinate)
+  def save_location_not_exist(area, address, coordinate)
     check_location = Location.find_by(address: address)
     if check_location == nil
       check_location = area.location.create(address: address, coordinate: coordinate)
@@ -48,7 +74,7 @@ class Location < ApplicationRecord
     check_location
   end
 
-  def self.distance(loc1, loc2)
+  def distance(loc1, loc2)
     rad_per_deg = Math::PI/180
     rkm = 6371
     rm = rkm * 1000
@@ -65,13 +91,9 @@ class Location < ApplicationRecord
     rm * c
   end
 
-  def api_key
-    api = 'AIzaSyAT3fcxh_TKujSW6d6fP9cUtrexk0eEvAE'
-  end
 
-  def get_google_api(pickup, destination)
+  def google_distance(pickup, destination)
     matrix = []
-    gmaps = GoogleMapsService::Client.new(key: api_key)
     origins = pickup
     destinations = destination
     if !origins.empty? && !destinations.empty?
@@ -85,8 +107,7 @@ class Location < ApplicationRecord
     result = Hash.new
     origin = distance_params[:origin]
     destination = distance_params[:destination]
-    api = get_google_api(origin, destination)
-
+    api = google_distance(origin, destination)
 
     distance = 0
     origin_address = []
@@ -104,57 +125,13 @@ class Location < ApplicationRecord
       destination_address = api[:destination_addresses]
       destination_address.reject! { |address| address.empty? }
     end
-
-
     result[:origin] = origin_address
     result[:destination] = destination_address
     result[:distance] = distance
     result[:unit] = "KM"
-
     result
   end
 
-  def pickup_address
-    result = []
-    if api_not_empty?
-      result = get_google_api[:origin_addresses]
-      result.reject! { |address| address.empty? }
-    end
-    result
-  end
-
-  def destination_address
-    result = []
-    if api_not_empty?
-      result = get_google_api[:destination_addresses]
-      result.reject! { |address| address.empty? }
-    end
-    result
-  end
-
-  def distance_matrix
-    result = 0
-    if api_not_empty?
-      if get_google_api[:rows][0][:elements][0][:status] == "OK"
-        result = get_google_api[:rows][0][:elements][0][:distance][:value]
-        result = (result.to_f / 1000).round(2)
-        result = 1.0 if result < 1.0
-      end
-    end
-    self.distance = result
-  end
-
-  def calculate_total
-    total = 0
-    if api_not_empty?
-      total = distance_matrix * cost_per_km
-    end
-    self.total = total
-  end
-
-  def api_not_empty?
-    !get_google_api.empty?
-  end
 
   def nearest_driver
     pickup_location = Location.get_location(pickup)
@@ -179,9 +156,7 @@ class Location < ApplicationRecord
       hash[driver.name] = Location.distance(origin_coordinate, driver.coordinate)
       hash
     end
-
     drivers_dist.min_by { |driver, length| length }
-
   end
 
 end

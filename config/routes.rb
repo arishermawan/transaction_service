@@ -5,4 +5,6 @@ Rails.application.routes.draw do
   resources :locations
 
   post 'locations/distance'
+  post 'locations/driver'
+
 end
