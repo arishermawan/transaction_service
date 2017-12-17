@@ -10,7 +10,7 @@ class Area < ApplicationRecord
     end
     puts "----------------------------------------------------------------------#{driver}"
     puts "---------------------------------------------------------------------#{queues}"
-    queues << driver
+    queues << driver  
     puts "-------------------------------------------------#{queues}"
     self.update(queue:queues)
   end
