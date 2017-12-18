@@ -1,5 +1,5 @@
 class GopaysController < ApplicationController
-  before_action :set_gopay, only: [:show, :update, :destroy]
+  before_action :set_gopay, only: [:add, :reduce, :show, :update, :destroy]
 
   def index
     @gopays = Gopay.all
@@ -10,9 +10,19 @@ class GopaysController < ApplicationController
     json_response(@gopay)
   end
 
-  def update
-    @gopay.update(gopay_params)
-    head :no_content
+  def create
+    @gopay = Gopay.create!(create_params)
+    json_response(@gopay, :created)
+  end
+
+  def add
+    @gopay.add_credit(update_params)
+    json_response(@gopay)
+  end
+
+  def reduce
+    @gopay.reduce_credit(update_params)
+    json_response(@gopay)
   end
 
   def destroy
@@ -22,8 +32,12 @@ class GopaysController < ApplicationController
 
   private
 
-  def gopay_params
-    params.permit(:amount, :user_id, :user_type)
+  def create_params
+    params.permit(:credit, :user_id, :user_type)
+  end
+
+  def update_params
+    params.permit(:credit)
   end
 
   def set_gopay

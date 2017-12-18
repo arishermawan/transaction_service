@@ -8,36 +8,21 @@ class Gopay < ApplicationRecord
   validates :credit, numericality:true
 
 
-  def self.add_credit(amount, user_id, user_type)
-    result = ''
-    record = find_record(user_id, user_type)
-    if !record.nil?
-      credit_update = record.credit + amount
-      update_record = record.update(credit: credit_update)
-      result = record.credit
-    else
-      result = add_record(amount, user_id, user_type)
-      result = result.credit
-    end
-    result
+  def add_credit(update_params)
+    credit_update = credit + update_params[:credit].to_f
+    self.update(credit: credit_update)
   end
 
-  def self.reduce_credit(amount, user_id, user_type)
-    result = ''
-    record = find_record(user_id, user_type)
-    if !record.nil?
-      credit_update = record.credit - amount
-      update_record = record.update(credit: credit_update)
-      result = record.credit
-    end
-    result
+  def reduce_credit(update_params)
+    credit_update = credit - update_params[:credit].to_f
+    self.update(credit: credit_update)
   end
 
-  def self.find_record(user_id, user_type)
+  def find_record(user_id, user_type)
     record = Gopay.find_by(user_id: user_id, user_type: user_type)
   end
 
-  def self.add_record(amount, user_id, user_type)
+  def add_record(amount, user_id, user_type)
     record = Gopay.create(credit:amount, user_id: user_id, user_type:user_type)
   end
 

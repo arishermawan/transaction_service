@@ -7,4 +7,13 @@ Rails.application.routes.draw do
   post 'locations/distance'
   post 'locations/driver'
 
+  get 'gopays/index'
+
+
+  post 'gopays', to: 'gopays#create'
+  get 'gopays/:id', to: 'gopays#show'
+
+  patch  'gopays/:id/add', to: 'gopays#add'
+  patch  'gopays/:id/reduce', to: 'gopays#reduce'
+
 end

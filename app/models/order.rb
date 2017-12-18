@@ -2,6 +2,8 @@ class Order < ApplicationRecord
   belongs_to :customer, optional: true
   belongs_to :driver, optional: true
 
+  after_create :order_created
+
   enum service: {
     "goride" => 0,
     "gocar" => 1
@@ -16,6 +18,17 @@ class Order < ApplicationRecord
   validates :payment, inclusion: payments.keys
   validates :service, inclusion: services.keys
   validates :pickup, :destination, presence:true
+
+
+  def order_created
+    puts "#{self.attributes}------------------------------------------------------------------------------------"
+    puts "------------------------------------------------------------------------------------"
+    puts "------------------------------------------------------------------------------------"
+    puts "------------------------------------------------------------------------------------"
+    puts "------------------------------------------------------------------------------------"
+    puts "------------------------------------------------------------------------------------"
+    puts "------------------------------------------------------------------------------------"
+  end
 
 
   def nearest_driver
