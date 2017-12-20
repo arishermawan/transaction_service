@@ -2,6 +2,8 @@ class Order < ApplicationRecord
   belongs_to :customer, optional: true
   belongs_to :driver, optional: true
 
+  before_update  :subtract_gopay, if: :driver_found
+  before_update  :add_gopay, if: :order_complete
   # after_create :request_driver_from_location_services
   # after_update :send_driver_to_application_services
   enum status: {
@@ -21,7 +23,6 @@ class Order < ApplicationRecord
     "gopay" => 1
   }
 
-  # validates_with GopayValidator
   validates :payment, inclusion: payments.keys
   validates :service, inclusion: services.keys
   validates :pickup, :destination, presence:true
@@ -50,6 +51,32 @@ class Order < ApplicationRecord
     found_driver[:driver_id] = driver
 
     kafka.deliver_message("PATCH-->#{found_driver.to_json}", topic: 'applicationServices')
+  end
+
+  def driver_found
+    changed.include?("status") && status == "driver found"
+  end
+
+  def order_complete
+    changed.include?("status") && status == "complete"
+  end
+
+  def subtract_gopay
+    if payment == 'gopay'
+      gopay = Gopay.find_by(user_id: customer_id, user_type: 'Customer')
+      gopay.reduce_credit(credit: total)
+    end
+  end
+
+  def add_gopay
+    if payment == 'gopay'
+      gopay = Gopay.find_by(user_id: driver_id, user_type: 'Driver')
+      if gopay.nil?
+        Gopay.new.add_record(total, driver_id, 'Driver')
+      else
+        gopay.add_credit(credit: total)
+      end
+    end
   end
 
 end

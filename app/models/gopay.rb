@@ -4,6 +4,8 @@ class Gopay < ApplicationRecord
     "Driver" => 1
   }
 
+  before_save :update_gopay_application_services
+
   validates :credit, :user_id, :user_type, presence:true
   validates :credit, numericality:true
 
@@ -22,8 +24,18 @@ class Gopay < ApplicationRecord
     record = Gopay.find_by(user_id: user_id, user_type: user_type)
   end
 
-  def add_record(amount, user_id, user_type)
-    record = Gopay.create(credit:amount, user_id: user_id, user_type:user_type)
+  def add_record(credit, user_id, user_type)
+    record = Gopay.create(credit:credit, user_id: user_id, user_type:user_type)
+  end
+
+  def update_gopay_application_services
+    require 'kafka'
+    kafka = Kafka.new( seed_brokers: ['localhost:9092'], client_id: 'transaction-service')
+    gopay = Hash.new
+    gopay[:credit] = credit
+    gopay[:user_id] = user_id
+    gopay[:user_type] = user_type
+    kafka.deliver_message("UPDATEGOPAY-->#{gopay.to_json}", topic: 'applicationServices')
   end
 
 end

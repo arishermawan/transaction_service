@@ -34,45 +34,37 @@ RSpec.describe Gopay, type: :model do
 
   describe "add_credit" do
     it 'add amount of credit' do
-      user_type = 'Customer'
-      credit = create(:gopay, user_id:1, user_type: user_type)
-      Gopay.add_credit(10000, 1, user_type)
-      gopay = Gopay.find_record(1,user_type)
-      expect(gopay.credit).to eq(10000.0)
-    end
-
-    it 'add record if not exist' do
-      user_type = 'Customer'
-      Gopay.add_credit(10000, 1, user_type)
-      gopay = Gopay.find_record(1,user_type)
-      expect(gopay.credit).to eq(10000.0)
+      gopay = create(:gopay)
+      gopay.add_credit(credit: 10000.0)
+      gopay.add_credit(credit: 10000.0)
+      gopay.reload
+      expect(gopay.credit).to eq(20000.0)
     end
   end
 
   describe "reduce_credit" do
     it 'reduce amount of credit' do
-      user_type = 'Customer'
-      credit = create(:gopay, id:1 ,credit:10000, user_id:1, user_type: user_type)
-      Gopay.reduce_credit(10000, 1, user_type)
-      gopay = Gopay.find_record(1, user_type)
-      expect(gopay.credit).to eq(0.0)
+      gopay = create(:gopay)
+      gopay.add_credit(credit:10000.0)
+      gopay.add_credit(credit:10000.0)
+      gopay.reduce_credit(credit:15000.0)
+      gopay.reload
+      expect(gopay.credit).to eq(5000.0)
     end
   end
 
   describe "find_record" do
     it 'return gopay object if found' do
-      user_type = 'Customer'
-      credit = create(:gopay, id:1 ,credit:10000, user_id:1, user_type: user_type)
-      gopay = Gopay.find_record(1, user_type)
-      expect(gopay.credit).to eq(10000.0)
+      gopay1 = create(:gopay)
+      gopay2 = Gopay.new.find_record(1, 'Customer')
+      expect(gopay2).to eq(gopay1)
     end
   end
 
   describe "add_record" do
     it 'create new record of gopay' do
-      user_type = 'Customer'
-      Gopay.add_record(10000, 1, 0)
-      gopay = Gopay.find_record(1, user_type)
+      gopay = Gopay.new.add_record(10000, 1, 0)
+      gopay.reload
       expect(gopay.credit).to eq(10000.0)
     end
   end
