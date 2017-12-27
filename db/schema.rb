@@ -15,13 +15,6 @@ ActiveRecord::Schema.define(version: 20171219040335) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
-  create_table "areas", force: :cascade do |t|
-    t.string "name"
-    t.string "queue", default: "[]"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-  end
-
   create_table "customers", force: :cascade do |t|
     t.string "email"
     t.string "password_digest"
@@ -36,29 +29,12 @@ ActiveRecord::Schema.define(version: 20171219040335) do
     t.datetime "updated_at", null: false
   end
 
-  create_table "gopay_credits", force: :cascade do |t|
-    t.decimal "credit"
-    t.integer "user_id"
-    t.integer "user_type"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-  end
-
   create_table "gopays", force: :cascade do |t|
     t.decimal "credit"
     t.integer "user_id"
     t.integer "user_type"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-  end
-
-  create_table "locations", force: :cascade do |t|
-    t.string "address"
-    t.string "coordinate"
-    t.bigint "area_id"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["area_id"], name: "index_locations_on_area_id"
   end
 
   create_table "orders", force: :cascade do |t|
@@ -76,5 +52,4 @@ ActiveRecord::Schema.define(version: 20171219040335) do
     t.integer "status", default: 0
   end
 
-  add_foreign_key "locations", "areas"
 end
